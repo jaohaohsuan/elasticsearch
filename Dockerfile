@@ -25,7 +25,9 @@ USER elasticsearch
 # COPY config/elasticsearch.yml /opt/elasticsearch/config/elasticsearch.yml
 # RUN chmod +x /opt/elasticsearch/run.sh
 
-VOLUME /data
+#VOLUME /opt/elasticsearch/data
+#VOLUME /opt/elasticsearch/logs
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["/opt/elasticsearch/bin/elasticsearch"]
+ENV PATH=$PATH:/opt/elasticsearch/bin
+#CMD ["/opt/elasticsearch/bin/elasticsearch"]
