@@ -20,13 +20,10 @@ RUN apk add --no-cache --virtual .fetch-deps curl && \
     rm -rf /var/cache/apk && \
     chown -R ${user} /opt/elasticsearch
 
-# USER elasticsearch
-COPY run.sh /opt/elasticsearch/run.sh
-# RUN chmod +x /opt/elasticsearch/run.sh
+COPY run.sh /opt/elasticsearch/bin/run.sh
 
-#VOLUME /opt/elasticsearch/data
-#VOLUME /opt/elasticsearch/logs
-
-ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "/opt/elasticsearch/run.sh"]
+EXPOSE 9200
+EXPOSE 9300
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 ENV PATH=$PATH:/opt/elasticsearch/bin
-#CMD ["/opt/elasticsearch/bin/elasticsearch"]
+CMD ["run.sh", "elasticsearch"]
