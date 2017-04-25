@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: elasticsearch
+  name: elasticsearch-single
 spec:
   type: NodePort
   selector:
@@ -33,10 +33,9 @@ spec:
           {
               "name": "init",
               "image": "busybox:latest",
-              "command": [ "sh", "-c", "chown 1005:1005 /opt/elasticsearch/data /opt/elasticsearch/logs" ],
+              "command": [ "sh", "-c", "chown 1005:1005 /opt/elasticsearch/data" ],
               "volumeMounts": [
-                { "name": "data", "mountPath": "/opt/elasticsearch/data" },
-                { "name": "logs", "mountPath": "/opt/elasticsearch/logs" }
+                { "name": "data", "mountPath": "/opt/elasticsearch/data" }
               ],
               "imagePullPolicy": "IfNotPresent"
             }
@@ -57,7 +56,7 @@ spec:
         - containerPort: 9300
         env:
         - name: ES_HEAP_SIZE
-          value: 2g
+          value: 256m
         - name: POD_IP
           valueFrom:
             fieldRef:
@@ -67,16 +66,10 @@ spec:
         - "elasticsearch"
         - "-Dcluster.name=myesdb"
         - "-Dhttp.cors.enabled=true"
-        - "-Dbootstrap.mlockall=true"
         - "-Dhttp.cors.allow-origin=*"
-        - "-Dnetwork.host=0.0.0.0"
         volumeMounts:
         - name: data
           mountPath: /opt/elasticsearch/data
-        - name: logs
-          mountPath: /opt/elasticsearch/logs
       volumes:
       - name: data
-        emptyDir: {}
-      - name: logs
         emptyDir: {}

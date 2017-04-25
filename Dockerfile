@@ -9,6 +9,7 @@ RUN addgroup -g ${gid} ${group} \
     && adduser -u ${uid} -G ${group} -s /bin/bash -D ${user}
 
 ENV VERSION 2.3.3
+
 RUN apk add --no-cache --virtual .fetch-deps curl && \
     curl -Ls https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 > /usr/local/bin/dumb-init && \
     chmod +x /usr/local/bin/dumb-init && \
@@ -20,11 +21,18 @@ RUN apk add --no-cache --virtual .fetch-deps curl && \
     rm -rf /var/cache/apk && \
     chown -R ${user} /opt/elasticsearch
 
-COPY run.sh /opt/elasticsearch/bin/run.sh
+WORKDIR /opt/elasticsearch
 
-EXPOSE 9200
-EXPOSE 9300
-ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
+USER elasticsearch
+COPY elasticsearch.yml config/
+COPY logging.yml config/
+
+USER root
+COPY run.sh bin/
 ENV PATH=$PATH:/opt/elasticsearch/bin
 ENV ES_HEAP_SIZE=256m
-CMD ["run.sh", "elasticsearch", "-Dnetwork.host=0.0.0.0", "-Dbootstrap.mlockall=true"]
+
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
+CMD ["run.sh", "elasticsearch"]
+
+EXPOSE 9200 9300
