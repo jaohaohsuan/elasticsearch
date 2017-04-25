@@ -26,4 +26,4 @@ EXPOSE 9200
 EXPOSE 9300
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 ENV PATH=$PATH:/opt/elasticsearch/bin
-CMD ["run.sh", "elasticsearch"]
+CMD ["run.sh", "elasticsearch", "-Dnetwork.host=_global_"]
