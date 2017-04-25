@@ -45,10 +45,9 @@ spec:
           {
               "name": "init",
               "image": "busybox:latest",
-              "command": [ "sh", "-c", "chown 1005:1005 /opt/elasticsearch/data /opt/elasticsearch/logs" ],
+              "command": [ "sh", "-c", "chown 1005:1005 /opt/elasticsearch/data" ],
               "volumeMounts": [
-                { "name": "storage", "mountPath": "/opt/elasticsearch/data" },
-                { "name": "logs", "mountPath": "/opt/elasticsearch/logs" }
+                { "name": "storage", "mountPath": "/opt/elasticsearch/data" }
               ],
               "imagePullPolicy": "IfNotPresent"
             }
@@ -87,8 +86,3 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: /opt/elasticsearch/data
-        - name: logs
-          mountPath: /opt/elasticsearch/logs
-      volumes:
-      - name: logs
-        emptyDir: {}
