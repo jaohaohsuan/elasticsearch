@@ -56,12 +56,18 @@ spec:
         env:
         - name: ES_HEAP_SIZE
           value: 2g
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         args:
+        - "run.sh"
         - "elasticsearch"
         - "-Dcluster.name=myesdb"
         - "-Dhttp.cors.enabled=true"
         - "-Dbootstrap.mlockall=true"
         - "-Dnetwork.host=_global_"
+        - "-Ddiscovery.zen.ping.unicast.hosts=$POD_IP"
         volumeMounts:
         - name: data
           mountPath: /opt/elasticsearch/data
