@@ -1,0 +1,94 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-data
+  labels:
+    app: elasticsearch
+    elasticsearch: data
+spec:
+  ports:
+  - port: 9300
+    name: transport
+  clusterIP: None
+  selector:
+    app: elasticsearch
+    elasticsearch: data
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: es-data
+  labels:
+    app: elasticsearch
+    elasticsearch: data
+spec:
+  serviceName: elasticsearch-data
+  replicas: 1
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      annotations:
+        volume.beta.kubernetes.io/storage-class: default
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+        elasticsearch: data
+      annotations:
+        pod.beta.kubernetes.io/init-containers: '[
+          {
+              "name": "init",
+              "image": "busybox:latest",
+              "command": [ "sh", "-c", "chown 1005:1005 /opt/elasticsearch/data /opt/elasticsearch/logs" ],
+              "volumeMounts": [
+                { "name": "storage", "mountPath": "/opt/elasticsearch/data" },
+                { "name": "logs", "mountPath": "/opt/elasticsearch/logs" }
+              ],
+              "imagePullPolicy": "IfNotPresent"
+            }
+          ]'
+    spec:
+      containers:
+      - name: es-data
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - IPC_LOCK
+              - SYS_RESOURCE
+        imagePullPolicy: Always
+        image: henryrao/elasticsearch:2.3.3
+        ports:
+        - containerPort: 9300
+        env:
+        - name: ES_HEAP_SIZE
+          value: 256m
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        args:
+        - "run.sh"
+        - "elasticsearch"
+        - "-Dcluster.name=myesdb"
+        - "-Dhttp.cors.enabled=true"
+        - "-Dbootstrap.mlockall=true"
+        - "-Dnetwork.host=0.0.0.0"
+        - "-Dnode.master=false"
+        - "-Dnode.data=true"
+        - "-Dhttp.enabled=false"
+        - "-Ddiscovery.zen.ping.unicast.hosts=elasticsearch-discovery.default.svc.cluster.local"
+        volumeMounts:
+        - name: storage
+          mountPath: /opt/elasticsearch/data
+        - name: logs
+          mountPath: /opt/elasticsearch/logs
+      volumes:
+      - name: logs
+        emptyDir: {}

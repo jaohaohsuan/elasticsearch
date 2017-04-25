@@ -1,0 +1,53 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: es-master
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+        elasticsearch: master
+    spec:
+      containers:
+      - name: es-master
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - IPC_LOCK
+              - SYS_RESOURCE
+        imagePullPolicy: Always
+        image: henryrao/elasticsearch:2.3.3
+        ports:
+        - containerPort: 9300
+        env:
+        - name: ES_HEAP_SIZE
+          value: 256m
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        args:
+        - "run.sh"
+        - "elasticsearch"
+        - "-Dcluster.name=myesdb"
+        - "-Dhttp.cors.enabled=true"
+        - "-Dbootstrap.mlockall=true"
+        - "-Dnetwork.host=0.0.0.0"
+        - "-Dnode.master=true"
+        - "-Dnode.data=false"
+        - "-Dhttp.enabled=false"
+        - "-Ddiscovery.zen.ping.unicast.hosts=elasticsearch-discovery.default.svc.cluster.local"
+        volumeMounts:
+        - name: data
+          mountPath: /opt/elasticsearch/data
+        - name: logs
+          mountPath: /opt/elasticsearch/logs
+      volumes:
+      - name: data
+        emptyDir: {}
+      - name: logs
+        emptyDir: {}
