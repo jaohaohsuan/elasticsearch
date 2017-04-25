@@ -68,6 +68,7 @@ spec:
         - "-Dcluster.name=myesdb"
         - "-Dhttp.cors.enabled=true"
         - "-Dbootstrap.mlockall=true"
+        - "-Dhttp.cors.allow-origin=*"
         - "-Dnetwork.host=0.0.0.0"
         volumeMounts:
         - name: data
