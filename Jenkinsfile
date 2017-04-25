@@ -17,7 +17,7 @@ podTemplate(
                 image = docker.build("henryrao/elasticsearch:${env.BRANCH_NAME}", '--pull .')
             }
             stage('testing') {
-                docker.image("henryrao/elasticsearch:${env.BRANCH_NAME}").inside('--privileged -e ES_HEAP_SIZE=256m') {
+                image.inside('--privileged -e ES_HEAP_SIZE=256m') {
                   sh 'run.sh elasticsearch -p /tmp/es.pid -Dbootstrap.mlockall=true &'
                   sh 'apk --no-cache add curl'
                   sh '''
@@ -34,7 +34,6 @@ podTemplate(
                 withDockerRegistry(url: 'https://index.docker.io/v1/', credentialsId: 'docker-login') {
                     parallel versioned: {
                         image.push()
-                    }, latest: {
                     },
                     failFast: false
                 }

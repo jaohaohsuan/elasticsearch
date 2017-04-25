@@ -66,8 +66,7 @@ spec:
         - "-Dcluster.name=myesdb"
         - "-Dhttp.cors.enabled=true"
         - "-Dbootstrap.mlockall=true"
-        - "-Dnetwork.host=_global_"
-        - "-Ddiscovery.zen.ping.unicast.hosts=$POD_IP"
+        - "-Dnetwork.host=0.0.0.0"
         volumeMounts:
         - name: data
           mountPath: /opt/elasticsearch/data
