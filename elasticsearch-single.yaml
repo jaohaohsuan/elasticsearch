@@ -26,6 +26,8 @@ spec:
     metadata:
       labels:
         app: elasticsearch-single
+        elasticsearch: master
+        elasticsearch: client
       annotations:
         pod.beta.kubernetes.io/init-containers: '[
           {
