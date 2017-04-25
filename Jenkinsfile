@@ -27,7 +27,9 @@ podTemplate(
                   done
                   '''
                   sh 'kill -9 `cat /tmp/es.pid`'
-                  sh 'cat /opt/elasticsearch/logs/elasticsearch.log'
+
+                  // After turning off file logging '/opt/elasticsearch/logs' should be empty.
+                  sh '[ ! "$(ls -A /opt/elasticsearch/logs)" ] && echo "file logging off"'
                 }
             }
             stage('push image') {
