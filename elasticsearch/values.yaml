@@ -21,6 +21,11 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+volumes:
+  data:
+    storageClass: default
+    size: 2Gi
+    mountPath: /opt/elasticsearch/data
 config:
   cluster:
     name: myesdb

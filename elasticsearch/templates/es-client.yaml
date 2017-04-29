@@ -2,7 +2,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: es-client-{{ .Release.Name }}
+  name: {{ printf "%s-client" .Values.service.name | trunc 63 }}
   labels:
 {{ include "labels" . | indent 4 }}      
 spec:

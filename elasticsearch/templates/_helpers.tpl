@@ -27,6 +27,12 @@ app: {{ .Chart.Name }}
 release: {{ .Release.Name }} 
 {{- end -}}
 
+{{- define "labels.data" -}}
+component: data
+app: {{ .Chart.Name }}
+release: {{ .Release.Name }} 
+{{- end -}}
+
 {{- define "labels" -}}
 heritage: {{ .Release.Service }}
 release: {{ .Release.Name }}
@@ -38,9 +44,9 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   {
     "name": "init",
     "image": "busybox:latest",
-    "command": [ "sh", "-c", "chown 1005:1005 /opt/elasticsearch/data" ],
+    "command": [ "sh", "-c", "chown 1005:1005 {{ .Values.volumes.data.mountPath }}" ],
     "volumeMounts": [
-      { "name": "storage", "mountPath": "/opt/elasticsearch/data" }
+      { "name": "storage", "mountPath": "{{ .Values.volumes.data.mountPath }}" }
     ],
     "imagePullPolicy": "IfNotPresent"
   } 

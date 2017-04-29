@@ -1,22 +1,47 @@
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: {{ printf "%s-master" .Values.service.name | trunc 63 }} 
+  name: {{ printf "%s-data" .Values.service.name | trunc 63 }}
   labels:
 {{ include "labels" . | indent 4 }}      
 spec:
-  replicas: {{ .Values.replicaCount.master }}
+  ports:
+  - port: 9300
+    name: transport
+  clusterIP: None
+  selector:
+{{ include "labels.data" . | indent 4 }}      
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: {{ printf "%s-data" .Values.service.name | trunc 63 }}
+  labels:
+{{ include "labels" . | indent 4 }}      
+spec:
+  serviceName: {{ printf "%s-data" .Values.service.name | trunc 63 }}
+  replicas: {{ .Values.replicaCount.data }}
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      annotations:
+        volume.beta.kubernetes.io/storage-class: {{ .Values.volumes.data.storageClass }}
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.volumes.data.size }}
   template:
     metadata:
       labels:
-{{ include "labels.master" . | indent 8 }}      
+{{ include "labels.data" . | indent 8 }}      
       annotations:
         pod.beta.kubernetes.io/init-containers: |-
 {{ include "initContainer" . | indent 10 }}    
     spec:
       containers:
-      - name: es-master
+      - name: es-data
         securityContext:
           privileged: true
           capabilities:
@@ -37,13 +62,10 @@ spec:
         - "-Dhttp.cors.enabled=true"
         - "-Dbootstrap.mlockall=true"
         - "-Dnetwork.host=0.0.0.0"
-        - "-Dnode.master=true"
-        - "-Dnode.data=false"
+        - "-Dnode.master=false"
+        - "-Dnode.data=true"
         - "-Dhttp.enabled=false"
         - {{ printf "-Ddiscovery.zen.ping.unicast.hosts=%s-discovery.default.svc.cluster.local" .Values.service.name | quote }}
         volumeMounts:
         - name: storage
           mountPath: {{ .Values.volumes.data.mountPath }}
-      volumes:
-      - name: storage
-        emptyDir: {}
