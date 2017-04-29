@@ -1,0 +1,25 @@
+# Default values for elasticsearch.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+service:
+  name: es
+replicaCount: 
+  master: 1
+  data: 2
+  client: 1
+heapSize:
+  master: 128m
+image:
+  repository: henryrao/elasticsearch
+  tag: 2.3.3
+  pullPolicy: IfNotPresent
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+config:
+  cluster:
+    name: myesdb

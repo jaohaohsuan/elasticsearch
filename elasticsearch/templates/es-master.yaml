@@ -3,13 +3,17 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: es-master
+  labels:
+{{ include "labels" . | indent 4 }}      
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: elasticsearch
-        elasticsearch: master
+{{ include "labels.master" . | indent 8 }}      
+      annotations:
+        pod.beta.kubernetes.io/init-containers: |-
+{{ include "initContainer" . | indent 10 }}    
     spec:
       containers:
       - name: es-master
@@ -19,13 +23,13 @@ spec:
             add:
               - IPC_LOCK
               - SYS_RESOURCE
-        imagePullPolicy: Always
-        image: henryrao/elasticsearch:2.3.3
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         ports:
         - containerPort: 9300
         env:
         - name: ES_HEAP_SIZE
-          value: 256m
+          value: {{ .Values.heapSize.master }}
         - name: POD_IP
           valueFrom:
             fieldRef:
@@ -33,21 +37,17 @@ spec:
         args:
         - "run.sh"
         - "elasticsearch"
-        - "-Dcluster.name=myesdb"
+        - {{ printf "-Dcluster.name=%s" .Values.config.cluster.name | quote }} 
         - "-Dhttp.cors.enabled=true"
         - "-Dbootstrap.mlockall=true"
         - "-Dnetwork.host=0.0.0.0"
         - "-Dnode.master=true"
         - "-Dnode.data=false"
         - "-Dhttp.enabled=false"
-        - "-Ddiscovery.zen.ping.unicast.hosts=elasticsearch-discovery.default.svc.cluster.local"
+        - {{ printf "-Ddiscovery.zen.ping.unicast.hosts=%s-discovery.default.svc.cluster.local" .Values.service.name | quote }}
         volumeMounts:
-        - name: data
+        - name: storage
           mountPath: /opt/elasticsearch/data
-        - name: logs
-          mountPath: /opt/elasticsearch/logs
       volumes:
-      - name: data
-        emptyDir: {}
-      - name: logs
+      - name: storage
         emptyDir: {}
