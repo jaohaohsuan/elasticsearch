@@ -9,6 +9,7 @@ replicaCount:
   client: 1
 heapSize:
   master: 128m
+  client: 128m
 image:
   repository: henryrao/elasticsearch
   tag: 2.3.3

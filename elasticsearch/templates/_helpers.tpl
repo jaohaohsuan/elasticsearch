@@ -46,5 +46,3 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   } 
 ]
 {{- end -}}
-
-

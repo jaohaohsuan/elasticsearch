@@ -2,21 +2,18 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: es-master-{{ .Release.Name }}
+  name: es-client-{{ .Release.Name }}
   labels:
 {{ include "labels" . | indent 4 }}      
 spec:
-  replicas: {{ .Values.replicaCount.master }}
+  replicas: {{ .Values.replicaCount.client }}
   template:
     metadata:
       labels:
-{{ include "labels.master" . | indent 8 }}      
-      annotations:
-        pod.beta.kubernetes.io/init-containers: |-
-{{ include "initContainer" . | indent 10 }}    
+{{ include "labels.client" . | indent 8 }}      
     spec:
       containers:
-      - name: es-master
+      - name: es-client
         securityContext:
           privileged: true
           capabilities:
@@ -29,7 +26,7 @@ spec:
         - containerPort: 9300
         env:
         - name: ES_HEAP_SIZE
-          value: {{ .Values.heapSize.master }}
+          value: {{ .Values.heapSize.client }}
         - name: POD_IP
           valueFrom:
             fieldRef:
@@ -39,15 +36,10 @@ spec:
         - "elasticsearch"
         - {{ printf "-Dcluster.name=%s" .Values.config.cluster.name | quote }} 
         - "-Dhttp.cors.enabled=true"
+        - "-Dhttp.cors.allow-origin=*"
         - "-Dbootstrap.mlockall=true"
         - "-Dnetwork.host=0.0.0.0"
-        - "-Dnode.master=true"
+        - "-Dnode.master=false"
         - "-Dnode.data=false"
-        - "-Dhttp.enabled=false"
+        - "-Dhttp.enabled=true"
         - {{ printf "-Ddiscovery.zen.ping.unicast.hosts=%s-discovery.default.svc.cluster.local" .Values.service.name | quote }}
-        volumeMounts:
-        - name: storage
-          mountPath: /opt/elasticsearch/data
-      volumes:
-      - name: storage
-        emptyDir: {}
