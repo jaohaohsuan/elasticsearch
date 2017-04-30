@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  elasticsearch:
+  - apiVersion: v1
+    appVersion: 2.3.3
+    created: 2017-04-30T11:59:26.581153015+08:00
+    description: elasticsearch cluster
+    digest: ab8bbee238f852084ae9f4c1de0f92fd35161373d3a6ca6b28017bc2087af3de
+    icon: https://worldvectorlogo.com/download/elastic-elasticsearch.svg
+    name: elasticsearch
+    urls:
+    - https://jaohaohsuan.github.io/elasticsearch/elasticsearch-0.1.0.tgz
+    version: 0.1.0
+generated: 2017-04-30T11:59:26.580095108+08:00
