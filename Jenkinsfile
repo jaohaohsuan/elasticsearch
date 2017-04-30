@@ -4,7 +4,8 @@ podTemplate(
         containerTemplate(name: 'jnlp', image: 'henryrao/jnlp-slave', args: '${computer.jnlpmac} ${computer.name}', alwaysPullImage: true)
     ],
     volumes: [
-        hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
+        hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'), 
+        hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config')
     ]) {
 
     node('es-build') {
@@ -58,6 +59,15 @@ podTemplate(
                         image.push()
                     },
                     failFast: false
+                }
+            }
+            stage('package') {
+                docker.image('henryrao/helm:2.3.1').inside('') { c ->
+                    sh '''
+                    # packaging
+                    helm package --destination docs elasticsearch
+                    helm repo index --url https://jaohaohsuan.github.io/elasticsearch/ docs
+                    '''
                 }
             }
         }
