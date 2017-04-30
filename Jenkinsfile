@@ -54,22 +54,23 @@ podTemplate(
                   },failFast: false
                 }
             }
-            stage('push image') {
-                withDockerRegistry(url: 'https://index.docker.io/v1/', credentialsId: 'docker-login') {
+            stage('release') {
+                parallel 'docker-hub': {
+                  withDockerRegistry(url: 'https://index.docker.io/v1/', credentialsId: 'docker-login') {
                     parallel versioned: {
-                        image.push()
+                      image.push()
                     },
                     failFast: false
-                }
-            }
-            stage('package') {
-                docker.image('henryrao/helm:2.3.1').inside('') { c ->
-                    sh '''
-                    # packaging
-                    helm package --destination /var/helm/repo elasticsearch
-                    helm repo index --url https://grandsys.github.io/helm-repository/ --merge /var/helm/repo/index.yaml /var/helm/repo
-                    '''
-                }
+                  }
+                }, 'helm-repo': {
+                  docker.image('henryrao/helm:2.3.1').inside('') { c ->
+                      sh '''
+                      # packaging
+                      helm package --destination /var/helm/repo elasticsearch
+                      helm repo index --url https://grandsys.github.io/helm-repository/ --merge /var/helm/repo/index.yaml /var/helm/repo
+                      '''
+                  }
+                }, failFast: false
             }
         }
     }
