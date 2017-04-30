@@ -67,8 +67,7 @@ podTemplate(
                     sh '''
                     # packaging
                     helm package --destination /var/helm/repo elasticsearch
-                    helm repo index --url https://grandsys.github.io/helm-repository/ docs
-                    helm repo index --merge docs/index.yaml /var/helm/repo
+                    helm repo index --url https://grandsys.github.io/helm-repository/ --merge /var/helm/repo/index.yaml /var/helm/repo
                     '''
                 }
             }
