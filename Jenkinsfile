@@ -41,13 +41,15 @@ podTemplate(
 													return (r == 0)
 											}
 									}
-									parallel 'index-dco': {
+									parallel 'index-doc': {
 										httpRequest contentType: 'APPLICATION_JSON', httpMode: 'PUT', requestBody: '''{
                           "title": "My first blog entry",
                           "text":  "Just trying this out...",
                           "date":  "2014/01/01"
                         }''', responseHandle: 'NONE', url: "${server}/website/blog/123", validResponseCodes: '201'
-									}, failFast: false
+									}, 'node-check': {
+										httpRequest url: "${server}/_cat/health?h=node.total", validResponseCodes: '200', validResponseContent: '1'
+									},failFast: false
 								}
 						}
             stage('push image') {
