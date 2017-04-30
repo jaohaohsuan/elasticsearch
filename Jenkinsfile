@@ -57,10 +57,7 @@ podTemplate(
             stage('release') {
                 parallel 'docker-hub': {
                   withDockerRegistry(url: 'https://index.docker.io/v1/', credentialsId: 'docker-login') {
-                    parallel versioned: {
-                      image.push()
-                    },
-                    failFast: false
+                    image.push()
                   }
                 }, 'helm-repo': {
                   docker.image('henryrao/helm:2.3.1').inside('') { c ->
