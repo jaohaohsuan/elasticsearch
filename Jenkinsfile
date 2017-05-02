@@ -71,6 +71,7 @@ podTemplate(
                     helm repo index --merge docs/index.yaml /var/helm/repo
                     '''
                 }
+                build job: 'helm-repository/master'
             }
         }
     }
