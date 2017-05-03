@@ -37,8 +37,6 @@ spec:
         - {{ printf "-Dcluster.name=%s" .Values.config.cluster.name | quote }} 
         - "-Dhttp.cors.enabled=true"
         - "-Dhttp.cors.allow-origin=*"
-        - "-Dbootstrap.mlockall=true"
-        - "-Dnetwork.host=0.0.0.0"
         - "-Dnode.master=false"
         - "-Dnode.data=false"
         - "-Dhttp.enabled=true"

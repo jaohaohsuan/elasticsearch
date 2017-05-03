@@ -58,10 +58,7 @@ spec:
         args:
         - "run.sh"
         - "elasticsearch"
-        - {{ printf "-Dcluster.name=%s" .Values.config.cluster.name | quote }} 
-        - "-Dhttp.cors.enabled=true"
-        - "-Dbootstrap.mlockall=true"
-        - "-Dnetwork.host=0.0.0.0"
+        - {{ printf "-Dcluster.name=%s" .Values.config.cluster.name | quote }}
         - "-Dnode.master=false"
         - "-Dnode.data=true"
         - "-Dhttp.enabled=false"
