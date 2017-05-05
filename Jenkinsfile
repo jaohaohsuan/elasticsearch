@@ -70,7 +70,7 @@ podTemplate(
                     helm repo index --url https://grandsys.github.io/helm-repository/ --merge /var/helm/repo/index.yaml /var/helm/repo
                     '''
                 }
-                build job: 'helm-repository/master'
+                build job: 'helm-repository/master', parameters: [string(name: 'commiter', value: "${env.JOB_NAME}\ncommit: ${sh script: 'git log --format=%B -n 1'}")]
             }
         }
     }
