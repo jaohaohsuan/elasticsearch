@@ -1,23 +1,29 @@
 podTemplate(
-    label: 'es-build',
-    containers: [
-        containerTemplate(name: 'jnlp', image: 'henryrao/jnlp-slave', args: '${computer.jnlpmac} ${computer.name}', alwaysPullImage: true)
+    label: 'es-build', containers: [
+      containerTemplate(name: 'jnlp', image: env.JNLP_SLAVE_IMAGE, args: '${computer.jnlpmac} ${computer.name}', alwaysPullImage: true),
+      containerTemplate(name: 'kube', image: "${env.PRIVATE_REGISTRY}/library/kubectl:v1.7.2", ttyEnabled: true, command: 'cat'),
+      containerTemplate(name: 'helm', image: 'henryrao/helm:2.3.1', ttyEnabled: true, command: 'cat'),
+      containerTemplate(name: 'dind', image: 'docker:stable-dind', privileged: true, ttyEnabled: true, command: 'dockerd', args: '--host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 --storage-driver=vfs')
     ],
     volumes: [
-        hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'), 
-        hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config'),
-        persistentVolumeClaim(claimName: 'helm-repository', mountPath: '/var/helm/repo', readOnly: false)
+        emptyDirVolume(mountPath: '/var/run', memory: false),
+        hostPathVolume(mountPath: "/etc/docker/certs.d/${env.PRIVATE_REGISTRY}/ca.crt", hostPath: "/etc/docker/certs.d/${env.PRIVATE_REGISTRY}/ca.crt"),
+        hostPathVolume(mountPath: '/home/jenkins/.kube/config', hostPath: '/etc/kubernetes/admin.conf'),
+        persistentVolumeClaim(claimName: env.HELM_REPOSITORY, mountPath: '/var/helm/', readOnly: false)
     ]) {
 
     node('es-build') {
         ansiColor('xterm') {
             def image
+
             stage('git clone') {
                 checkout scm
             }
+
             stage('build image') {
-                image = docker.build("henryrao/elasticsearch:${env.BRANCH_NAME}", '--pull .')
+                image = docker.build("${env.PRIVATE_REGISTRY}/library/elasticsearch:${env.BRANCH_NAME}", '--pull .')
             }
+
             stage('system testing') {
                 image.inside('--privileged -e ES_HEAP_SIZE=128m') {
                   sh 'run.sh elasticsearch -p /tmp/es.pid -Dbootstrap.mlockall=true &'
@@ -34,6 +40,7 @@ podTemplate(
                   sh '[ ! "$(ls -A /opt/elasticsearch/logs)" ] && echo "file logging off"'
                 }
             }
+
             stage('integration testing') {
                 image.withRun('--privileged -e ES_HEAP_SIZE=64m', 'run.sh elasticsearch -Dbootstrap.mlockall=true -Dhttp.cors.enabled=true -Dhttp.cors.allow-origin=* -Dnetwork.host=0.0.0.0') { c ->
                   def server = "http://${containerIP(c)}:9200"
@@ -54,24 +61,30 @@ podTemplate(
                   },failFast: false
                 }
             }
+
             stage('push image') {
-                withDockerRegistry(url: 'https://index.docker.io/v1/', credentialsId: 'docker-login') {
+                withDockerRegistry(url: env.PRIVATE_REGISTRY_URL, credentialsId: 'docker-login') {
                     parallel versioned: {
                         image.push()
                     },
                     failFast: false
                 }
             }
-            stage('package') {
-                docker.image('henryrao/helm:2.3.1').inside('') { c ->
-                    sh '''
-                    # packaging
-                    helm package --destination /var/helm/repo elasticsearch
-                    helm repo index --url https://grandsys.github.io/helm-repository/ --merge /var/helm/repo/index.yaml /var/helm/repo
-                    '''
+
+            container('helm') {
+                stage('package') {
+                    sh 'helm init --client-only'
+                    sh 'helm lint elasticsearch'
+                    sh 'helm package --destination /var/helm/repo elasticsearch'
+                    sh """
+                    merge=`[[ -e '/var/helm/repo/index.yaml' ]] && echo '--merge /var/helm/repo/index.yaml' || echo ''`
+                    helm repo index --url ${env.HELM_PUBLIC_REPO_URL} \$merge /var/helm/repo
+                    """
                 }
-                build job: 'helm-repository/master', parameters: [string(name: 'commiter', value: "${env.JOB_NAME}\ncommit: ${sh(script: 'git log --format=%B -n 1', returnStdout: true).trim()}")]
             }
+
+            build job: 'helm-repository/master', parameters: [string(name: 'commiter', value: "${env.JOB_NAME}\ncommit: ${sh(script: 'git log --format=%B -n 1', returnStdout: true).trim()}")]
+
         }
     }
 }
