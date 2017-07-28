@@ -1,6 +1,7 @@
 # Default values for elasticsearch.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
 service:
   name: es
 replicaCount: 
@@ -12,9 +13,9 @@ heapSize:
   client: 128m
   data: 256m
 image:
-  repository: henryrao/elasticsearch
+  repository: docker.grandsys.com/library/elasticsearch
   tag: 2.3.3
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 resources:
   limits:
     cpu: 100m

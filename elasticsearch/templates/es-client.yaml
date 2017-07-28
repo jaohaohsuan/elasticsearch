@@ -10,7 +10,7 @@ spec:
   template:
     metadata:
       labels:
-{{ include "labels.client" . | indent 8 }}      
+{{ include "labels.client" . | indent 8 }}
     spec:
       containers:
       - name: es-client

@@ -12,7 +12,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 */}}
 {{- define "fullname" -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" $name .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "labels.master" -}}
@@ -37,18 +37,4 @@ release: {{ .Release.Name }}
 heritage: {{ .Release.Service }}
 release: {{ .Release.Name }}
 chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-{{- end -}}
-
-{{- define "initContainer" -}}
-[
-  {
-    "name": "init",
-    "image": "busybox:latest",
-    "command": [ "sh", "-c", "chown 1005:1005 {{ .Values.volumes.data.mountPath }}" ],
-    "volumeMounts": [
-      { "name": "storage", "mountPath": "{{ .Values.volumes.data.mountPath }}" }
-    ],
-    "imagePullPolicy": "IfNotPresent"
-  } 
-]
 {{- end -}}

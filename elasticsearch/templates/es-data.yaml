@@ -35,10 +35,7 @@ spec:
   template:
     metadata:
       labels:
-{{ include "labels.data" . | indent 8 }}      
-      annotations:
-        pod.beta.kubernetes.io/init-containers: |-
-{{ include "initContainer" . | indent 10 }}    
+{{ include "labels.data" . | indent 8 }}
     spec:
       containers:
       - name: es-data
@@ -53,6 +50,8 @@ spec:
         ports:
         - containerPort: 9300
         env:
+        - name: ES_PATH_DATA
+          value: {{ .Values.volumes.data.mountPath }}
         - name: ES_HEAP_SIZE
           value: {{ .Values.heapSize.data }}
         args:

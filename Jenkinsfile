@@ -55,7 +55,53 @@ podTemplate(
               }
           }
 
-          
+          container('helm') {
+              sh 'helm init --client-only'
+
+              def releaseName = "es-release-${env.BUILD_ID}"
+
+              try {
+                  dir('elasticsearch') {
+                      stage('test chart') {
+                          echo 'syntax check'
+                          sh 'helm lint .'
+                          
+                          echo 'install chart'
+                          def service = "es-test-${env.BUILD_ID}"
+                          sh "helm install --set=service.name=${service},replicaCount.data=1 -n ${releaseName} ."
+                          sh "helm test ${releaseName} --cleanup"
+                      }
+                  }
+
+                  stage('package chart') {
+                      dir('elasticsearch') {
+                          echo 'archive chart'
+                          sh 'helm package --destination /var/helm/repo .'
+                          
+                          echo 'generate an index file'
+                          sh """
+                          merge=`[[ -e '/var/helm/repo/index.yaml' ]] && echo '--merge /var/helm/repo/index.yaml' || echo ''`
+                          helm repo index --url ${env.HELM_PUBLIC_REPO_URL} \$merge /var/helm/repo
+                          """
+                      }
+
+                      build job: 'helm-repository/master', parameters: [string(name: 'commiter', value: "${env.JOB_NAME}\ncommit: ${sh(script: 'git log --format=%B -n 1', returnStdout: true).trim()}")]
+                  }
+
+              } catch (error) {
+                  echo "${e}"
+                  currentBuild.result = FAILURE
+              } finally {
+                  stage('clean up') {
+                      container('helm') {
+                          sh "helm delete --purge ${releaseName}"
+                      }
+                      container('kube') {
+                          sh "kubectl delete pvc -l release=${releaseName}"
+                      }
+                  }
+              }
+          }
     }
   }
 }
