@@ -20,6 +20,7 @@ podTemplate(
           }
 
           def image
+          def last_commit = sh(script: 'git log --format=%B -n 1', returnStdout: true).trim()
 
           stage('build image') {
               image = docker.build("${env.PRIVATE_REGISTRY}/library/elasticsearch:${env.BRANCH_NAME}", '--pull .')
@@ -84,8 +85,7 @@ podTemplate(
                           helm repo index --url ${env.HELM_PUBLIC_REPO_URL} \$merge /var/helm/repo
                           """
                       }
-
-                      build job: 'helm-repository/master', parameters: [string(name: 'commiter', value: "${env.JOB_NAME}\ncommit: ${sh(script: 'git log --format=%B -n 1', returnStdout: true).trim()}")]
+                      build job: 'helm-repository/master', parameters: [string(name: 'commiter', value: "${env.JOB_NAME}\ncommit: ${last_commit}")]
                   }
 
               } catch (error) {
