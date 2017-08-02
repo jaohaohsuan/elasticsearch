@@ -12,5 +12,6 @@ spec:
     command:
       - "/bin/bash"
       - "-c"
-      - 'curl -s {{ $host }}/_cat/health | grep green'
+      - |-
+        curl -s {{ $host }}/_cat/health | grep green
   restartPolicy: OnFailure
