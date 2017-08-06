@@ -89,7 +89,7 @@ podTemplate(
                   }
 
               } catch (error) {
-                  echo "${e}"
+                  echo "${error}"
                   currentBuild.result = FAILURE
               } finally {
                   stage('clean up') {
